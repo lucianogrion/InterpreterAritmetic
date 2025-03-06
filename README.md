@@ -1,151 +1,194 @@
-# InterpreterAritmetic
-InterpreterAritmetic
-Explicación del Analizador Sintáctico (Parser)
-El objetivo del parser es convertir una cadena como 3 + 4 * (2 - 1) en una estructura en memoria (árbol de expresiones) que podamos evaluar correctamente.
+Intérprete de Expresiones Aritméticas en C#
 
-Para lograr esto, necesitamos respetar la jerarquía de operadores:
+Este proyecto implementa el Patrón Interpreter en C# para evaluar expresiones aritméticas simples como 3 + 2 * 4, respetando la precedencia de operadores.
 
-Los paréntesis tienen la máxima prioridad.
-Multiplicación y división (*, /) tienen prioridad sobre suma y resta.
-Suma y resta (+, -) tienen la menor prioridad y se evalúan de izquierda a derecha.
-ParseExpression()
-📌 Maneja suma (+) y resta (-) porque tienen la menor prioridad.
+🛠 Características
 
-Primero llama a ParseTerm(), que se encarga de manejar multiplicación y división.
-Luego, consume + o - y sigue procesando términos.
-csharp
-Copy
-Edit
-private IExpression ParseExpression()
+✅ Implementa el Patrón Interpreter.
+
+✅ Soporta suma (+) y multiplicación (*).
+
+✅ Convierte una cadena en un árbol de expresión.
+
+✅ Evalúa la expresión usando recursión.
+
+📂 Estructura del Proyecto
+
+📁 InterpreterArithmetic
+│── Program.cs        // Punto de entrada
+│── IExpression.cs    // Interfaz común
+│── Number.cs         // Clase para números
+│── Add.cs            // Operador suma
+│── Multiply.cs       // Operador multiplicación
+│── ExpressionParser.cs // Parser que convierte una cadena en un árbol
+│── README.md         // Documentación
+
+📜 Código Principal
+
+1️⃣ Interfaz Común
+
+interface IExpression
 {
-    IExpression left = ParseTerm(); // Primero parseamos un término
-
-    while (tokens.Count > 0 && (tokens.Peek() == "+" || tokens.Peek() == "-"))
-    {
-        string op = tokens.Dequeue(); // Tomamos el operador
-        IExpression right = ParseTerm(); // Procesamos el siguiente término
-
-        if (op == "+")
-            left = new AddExpression(left, right);
-        else
-            left = new SubtractExpression(left, right);
-    }
-
-    return left; // Devuelve la expresión completa
+    int Interpret();
 }
-💡 Ejemplo:
-Entrada: "3 + 4 * 2"
 
-ParseTerm() procesa 4 * 2 antes que 3 +
-Se genera el árbol de expresiones correctamente.
-ParseTerm()
-📌 Maneja multiplicación (*) y división (/), que tienen mayor prioridad que + y -.
+2️⃣ Clases para Operaciones
 
-Primero llama a ParseFactor(), que obtiene un número o un paréntesis.
-Luego, consume * o / y sigue procesando factores.
-csharp
-Copy
-Edit
-private IExpression ParseTerm()
+class Number : IExpression
 {
-    IExpression left = ParseFactor(); // Primero obtenemos un factor
-
-    while (tokens.Count > 0 && (tokens.Peek() == "*" || tokens.Peek() == "/"))
-    {
-        string op = tokens.Dequeue(); // Tomamos el operador
-        IExpression right = ParseFactor(); // Procesamos el siguiente factor
-
-        if (op == "*")
-            left = new MultiplyExpression(left, right);
-        else
-            left = new DivideExpression(left, right);
-    }
-
-    return left;
+    private int _value;
+    public Number(int value) => _value = value;
+    public int Interpret() => _value;
 }
-💡 Ejemplo:
-Entrada: "4 * 2"
 
-ParseFactor() obtiene 4
-ParseFactor() obtiene 2
-Se genera la operación 4 * 2
-ParseFactor()
-📌 Maneja números y paréntesis.
-
-Si el token es un número (3, 4, 5...), lo convierte en una NumberExpression.
-Si el token es (, significa que hay una subexpresión dentro de paréntesis, así que llama recursivamente a ParseExpression().
-csharp
-Copy
-Edit
-private IExpression ParseFactor()
+class Add : IExpression
 {
-    string token = tokens.Dequeue(); // Tomamos el siguiente token
+    private IExpression _left, _right;
+    public Add(IExpression left, IExpression right)
+    {
+        _left = left;
+        _right = right;
+    }
+    public int Interpret() => _left.Interpret() + _right.Interpret();
+}
 
-    if (int.TryParse(token, out int number))
+class Multiply : IExpression
+{
+    private IExpression _left, _right;
+    public Multiply(IExpression left, IExpression right)
     {
-        return new NumberExpression(number); // Es un número
+        _left = left;
+        _right = right;
     }
-    else if (token == "(")
+    public int Interpret() => _left.Interpret() * _right.Interpret();
+}
+
+3️⃣ Parser de Expresiones
+
+class ExpressionParser
+{
+    private Queue<string> tokens;
+
+    public ExpressionParser(string expression)
     {
-        IExpression expression = ParseExpression(); // Procesamos lo que está dentro de los paréntesis
-        tokens.Dequeue(); // Consumimos el ')' correspondiente
-        return expression;
+        tokens = new Queue<string>(Tokenize(expression));
     }
-    else
+
+    private List<string> Tokenize(string expression)
     {
-        throw new InvalidOperationException($"Token inesperado: {token}");
+        List<string> tokens = new List<string>();
+        string number = "";
+
+        foreach (char c in expression)
+        {
+            if (char.IsDigit(c)) number += c;
+            else if ("+-*/".Contains(c))
+            {
+                if (number != "") tokens.Add(number);
+                tokens.Add(c.ToString());
+                number = "";
+            }
+        }
+        if (number != "") tokens.Add(number);
+        return tokens;
+    }
+
+    public IExpression Parse()
+    {
+        return ParseAddSubtract();
+    }
+
+    private IExpression ParseAddSubtract()
+    {
+        IExpression left = ParseMultiplyDivide();
+
+        while (tokens.Count > 0 && (tokens.Peek() == "+" || tokens.Peek() == "-"))
+        {
+            string op = tokens.Dequeue();
+            IExpression right = ParseMultiplyDivide();
+            left = (op == "+") ? new Add(left, right) : throw new NotImplementedException();
+        }
+
+        return left;
+    }
+
+    private IExpression ParseMultiplyDivide()
+    {
+        IExpression left = ParseNumber();
+
+        while (tokens.Count > 0 && (tokens.Peek() == "*" || tokens.Peek() == "/"))
+        {
+            string op = tokens.Dequeue();
+            IExpression right = ParseNumber();
+            left = (op == "*") ? new Multiply(left, right) : throw new NotImplementedException();
+        }
+
+        return left;
+    }
+
+    private IExpression ParseNumber()
+    {
+        if (tokens.Count == 0) throw new Exception("Expresión inválida");
+        return new Number(int.Parse(tokens.Dequeue()));
     }
 }
-💡 Ejemplo:
-Entrada: "(2 - 1)"
 
-Consume (
-Llama a ParseExpression() para procesar 2 - 1
-Consume )
-Devuelve la subexpresión 2 - 1
-Ejemplo Completo Paso a Paso
-Entrada: "3 + 4 * (2 - 1)"
-plaintext
-Copy
-Edit
-Tokens: ["3", "+", "4", "*", "(", "2", "-", "1", ")"]
-ParseExpression()
-Llama a ParseTerm() → (Busca términos antes de +)
-ParseFactor() obtiene 3
-Detecta +
-Llama a ParseTerm() → (Procesa 4 * (2 - 1))
-ParseFactor() obtiene 4
-Detecta *
-ParseFactor() encuentra ( y llama a ParseExpression()
-ParseTerm() obtiene 2
-Detecta -
-ParseTerm() obtiene 1
-ParseExpression() devuelve 2 - 1
-ParseFactor() devuelve (2 - 1)
-ParseTerm() devuelve 4 * (2 - 1)
-ParseExpression() devuelve 3 + (4 * (2 - 1))
-✔ Árbol de Expresiones Generado:
+4️⃣ Programa Principal
 
-markdown
-Copy
-Edit
-      +
-     / \
-    3   *
-       / \
-      4   -
-         / \
-        2   1
-✔ Evaluación:
+class Program
+{
+    static void Main()
+    {
+        string input = "3 + 2 * 4";
+        ExpressionParser parser = new ExpressionParser(input);
+        IExpression expression = parser.Parse();
+        Console.WriteLine($"Resultado: {expression.Interpret()}"); // Output: 11
+    }
+}
 
-Copy
-Edit
-2 - 1 = 1
-4 * 1 = 4
-3 + 4 = 7
-➡ Resultado: 7
+🚀 Ejecución
 
-Resumen
-✅ ParseExpression(): Maneja + y - (menor prioridad)
-✅ ParseTerm(): Maneja * y / (mayor prioridad)
-✅ ParseFactor(): Maneja números y paréntesis (máxima prioridad)
+🔧 Requisitos
+
+.NET SDK instalado.
+
+Compilador C#.
+
+🏃 Ejecutar el programa
+
+# Compilar
+csc Program.cs IExpression.cs Number.cs Add.cs Multiply.cs ExpressionParser.cs
+
+# Ejecutar
+Program.exe
+
+📌 Explicación
+
+Tokenización (Tokenize()): Convierte "3 + 2 * 4" en ["3", "+", "2", "*", "4"].
+
+Construcción del árbol (Parse()):
+
+    (+)
+   /   \
+ (3)   (*)
+      /   \
+    (2)   (4)
+
+Evaluación (Interpret()):
+
+2 * 4 = 8
+
+3 + 8 = 11
+
+📌 Mejoras Futuras
+
+✅ Soporte para resta (-) y división (/).
+✅ Soporte para paréntesis ().
+✅ Manejo de errores sintácticos.
+
+📜 Licencia
+
+Este proyecto es de código abierto y puedes usarlo libremente.
+
+📌 Autor: Tu Nombre
+
