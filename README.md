@@ -1,5 +1,8 @@
 ### Intérprete de Expresiones Aritméticas en C#
 
+![Diagrama del Intérprete de Expresión](InterpreterPattern.png)
+
+
 Este proyecto implementa el Patrón Interpreter en C# para evaluar expresiones aritméticas simples como 3 + 2 * 4, respetando la precedencia de operadores.
 
 🛠 Características
