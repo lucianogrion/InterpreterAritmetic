@@ -3,20 +3,23 @@
 ![Diagrama del Intérprete de Expresión](InterpreterPattern.png)
 
 
-Este proyecto implementa el Patrón Interpreter en C# para evaluar expresiones aritméticas simples como 3 + 2 * 4, respetando la precedencia de operadores.
+# **Intérprete de Expresiones Aritméticas en C#**
 
-🛠 Características
+Este proyecto implementa el **Patrón Interpreter** en **C#** para evaluar expresiones aritméticas simples como `3 + 2 * 4`, respetando la precedencia de operadores.
 
-✅ Implementa el Patrón Interpreter.
+---
 
-✅ Soporta suma (+) y multiplicación (*).
+## **🛠 Características**
+- ✅ Implementa el **Patrón Interpreter**.
+- ✅ Soporta **suma (+)** y **multiplicación (*)**.
+- ✅ Convierte una cadena en un **árbol de expresión**.
+- ✅ Evalúa la expresión usando **recursión**.
 
-✅ Convierte una cadena en un árbol de expresión.
+---
 
-✅ Evalúa la expresión usando recursión.
+## **📂 Estructura del Proyecto**
 
-📂 Estructura del Proyecto
-
+```
 📁 InterpreterArithmetic
 │── Program.cs        // Punto de entrada
 │── IExpression.cs    // Interfaz común
@@ -25,18 +28,22 @@ Este proyecto implementa el Patrón Interpreter en C# para evaluar expresiones a
 │── Multiply.cs       // Operador multiplicación
 │── ExpressionParser.cs // Parser que convierte una cadena en un árbol
 │── README.md         // Documentación
+```
 
-📜 Código Principal
+---
 
-1️⃣ Interfaz Común
+## **📜 Código Principal**
 
+### **1️⃣ Interfaz Común**
+```csharp
 interface IExpression
 {
     int Interpret();
 }
+```
 
-2️⃣ Clases para Operaciones
-
+### **2️⃣ Clases para Operaciones**
+```csharp
 class Number : IExpression
 {
     private int _value;
@@ -65,9 +72,10 @@ class Multiply : IExpression
     }
     public int Interpret() => _left.Interpret() * _right.Interpret();
 }
+```
 
-3️⃣ Parser de Expresiones
-
+### **3️⃣ Parser de Expresiones**
+```csharp
 class ExpressionParser
 {
     private Queue<string> tokens;
@@ -135,9 +143,10 @@ class ExpressionParser
         return new Number(int.Parse(tokens.Dequeue()));
     }
 }
+```
 
-4️⃣ Programa Principal
-
+### **4️⃣ Programa Principal**
+```csharp
 class Program
 {
     static void Main()
@@ -148,50 +157,53 @@ class Program
         Console.WriteLine($"Resultado: {expression.Interpret()}"); // Output: 11
     }
 }
+```
 
-🚀 Ejecución
+---
 
-🔧 Requisitos
+## **🚀 Ejecución**
+### **🔧 Requisitos**
+- .NET SDK instalado.
+- Compilador C#.
 
-.NET SDK instalado.
-
-Compilador C#.
-
-🏃 Ejecutar el programa
-
+### **🏃 Ejecutar el programa**
+```sh
 # Compilar
 csc Program.cs IExpression.cs Number.cs Add.cs Multiply.cs ExpressionParser.cs
 
 # Ejecutar
 Program.exe
+```
 
-📌 Explicación
+---
 
-Tokenización (Tokenize()): Convierte "3 + 2 * 4" en ["3", "+", "2", "*", "4"].
-
-Construcción del árbol (Parse()):
-
-    (+)
-   /   \
- (3)   (*)
+## **📌 Explicación**
+1. **Tokenización** (`Tokenize()`): Convierte `"3 + 2 * 4"` en `["3", "+", "2", "*", "4"]`.
+2. **Construcción del árbol** (`Parse()`):
+   ```
+       (+)
       /   \
-    (2)   (4)
+    (3)   (*)
+         /   \
+       (2)   (4)
+   ```
+3. **Evaluación** (`Interpret()`):
+   - `2 * 4 = 8`
+   - `3 + 8 = 11`
 
-Evaluación (Interpret()):
+---
 
-2 * 4 = 8
+## **📌 Mejoras Futuras**
+✅ Soporte para **resta (-) y división (/)**.
+✅ Soporte para **paréntesis ()**.
+✅ Manejo de **errores sintácticos**.
 
-3 + 8 = 11
+---
 
-📌 Mejoras Futuras
-
-✅ Soporte para resta (-) y división (/).
-✅ Soporte para paréntesis ().
-✅ Manejo de errores sintácticos.
-
-📜 Licencia
-
+## **📜 Licencia**
 Este proyecto es de código abierto y puedes usarlo libremente.
 
-📌 Autor: Tu Nombre
+📌 **Autor:** *Luchoni*
+
+
 
